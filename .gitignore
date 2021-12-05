@@ -1,12 +1,20 @@
 ## large files
 *.csv
 *.xlsx
+*.jpg
+*.pkl
+*.model
+*.h5
+Classifiers/
+*.npy
+
 
 ## python cache files
 *.pyc
 __init__.py
 __pycacge__/
 .DS_Store
+.idea/
 
 
 

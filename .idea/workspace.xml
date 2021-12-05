@@ -5,53 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dfc9afb7-49c6-402f-b873-0e74f4050518" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/top20_by_sector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector10_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector15_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector20_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector25_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector30_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector35_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector40_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector45_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector50_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector55_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-focasting_data/sector60_clean.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-sp500_adj_price.csv.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/1-spx_price.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/2-portfolio_data/equally_weighted_user8.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/2-portfolio_data/mean_weighted_user8.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/2-portfolio_data/minimum_weighted_user8.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/2-portfolio_data/stocks_selected_total_user8.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/all_return_table.pickle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/all_stocks_info.pickle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/fundamental_final_table.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/stocks_weight_table.xlsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/ml_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/old_Rcode/fundamental_ML_model.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/old_Rcode/fundamental_run_model.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/old_Rcode/fundamental_select_stock.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart10_insample.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart11_overallPerformance.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart1_datasetPeriod.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart2_rolling_windows.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart3_modelError.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart4_predictedReturn1.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart4_predictedReturn2.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart5_coefficient.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart6_selectedStocks.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart7_efficient1.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart8_PnL.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/chart9_TotalValue.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/dataperiod.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/efficient1.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/pnl1.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/rolling_windows.vsdx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/figs/transaction cost.PNG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundamental_back_testing.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundamental_portfolio.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/fundamental_run_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundamental_run_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -147,6 +101,7 @@
       <workItem from="1638577230964" duration="1000" />
       <workItem from="1638577323181" duration="862000" />
       <workItem from="1638636134265" duration="471000" />
+      <workItem from="1638724441288" duration="92000" />
     </task>
     <servers />
   </component>
