@@ -10,11 +10,23 @@ def get_normalized_return_with_sector(df,t,init_idx=0, cur_idx=-1):
     sector = df[df['tic'] == t]['GICS Sector'].iloc[0]
     return cur_price / fir_price - 1, sector
 
+def get_sharpe_ratio(df,t):
+    '''
+        pass index of sorted df to determine the return interval
+        by default, it calculates the first and last day normalized gain
+    '''
+    returns = df[df['tic'] == t]['y_return']
+    len_of_duration = returns.shape[0]
+    sector = df[df['tic'] == t]['GICS Sector'].iloc[0]
+    sharpe_ratio = (len_of_duration)**0.5*returns.mean()/returns.std()
+    #print(sharpe_ratio, sector)
+    return sharpe_ratio, sector
+
 def get_res_df(df):
     tic, norm_gain, sector = [], [], []
     for t in df['tic'].unique(): #bottleneck, check pandas docs if possible
         tic.append(t)
-        g, s = get_normalized_return_with_sector(df,t)
+        g, s = get_sharpe_ratio(df,t)
         norm_gain.append(g)
         sector.append(s)
     df_result = pd.DataFrame(list(zip(tic,norm_gain,sector)),columns=['tic','norm_gain','sector'])

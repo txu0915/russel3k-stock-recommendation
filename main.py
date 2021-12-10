@@ -43,16 +43,16 @@ if pull_data:
 
     final_file_prefix = os.path.join(final_file_folder, final_file_prefix)
     final_df = processing_raw_data(km_df,fa_df,stock_df,sector_tic, gvkey_conm_unique, final_file_prefix=final_file_prefix)
-    outp_fp = "top20-ressull3000.csv"
+    outp_fp = "top20-ressull3000-based-on-sharpe-ratio.csv"
     final_df_top20 = get_top20(get_res_df(final_df), outp_fp)
 
-    split_sector(final_df_top20)
+    split_sector(final_df,final_df_top20)
     print(final_df_top20.shape,final_df_top20.head(),final_df_top20.columns)
 
     ## read back data for test...
-    final_df = pd.read_csv('--ress3k_fundamental_final.csv')
-    final_df_top20 = pd.read_csv("top20-ressull3000.csv")
-    split_sector(final_df, final_df_top20)
+    # final_df = pd.read_csv('--ress3k_fundamental_final.csv')
+    # final_df_top20 = pd.read_csv("top20-ressull3000.csv")
+    # split_sector(final_df, final_df_top20)
 
 
 

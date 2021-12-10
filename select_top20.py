@@ -7,9 +7,16 @@ Created on Sun Sep 26 22:31:47 2021
 """
 
 import pandas as pd
+import numpy as np
 import datetime as dt
-from pypfopt.efficient_frontier import EfficientFrontier
-from pypfopt import risk_models
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import quandl
+import scipy.optimize as sco
+# from pypfopt.efficient_frontier import EfficientFrontier
+# from pypfopt import risk_models
 import os
 
 
@@ -162,54 +169,151 @@ def get_return_and_info_table(selected_stock,df_price):
             return_table=return_table.append(temp_price,ignore_index=True)
         all_return_table[trade_date[i]] = return_table
 
-    return all_stocks_info,  all_return_table               
+    return all_stocks_info,  all_return_table
+
+def neg_sharpe_ratio(weights, mean_returns, cov_matrix, risk_free_rate):
+    p_var, p_ret = portfolio_annualised_performance(weights, mean_returns, cov_matrix)
+    return -(p_ret - risk_free_rate) / p_var
+
+def portfolio_annualised_performance(weights, mean_returns, cov_matrix):
+    returns = np.sum(mean_returns*weights ) *252
+    std = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * np.sqrt(252)
+    return std, returns
+
+def max_sharpe_ratio(mean_returns, cov_matrix, risk_free_rate):
+    num_assets = len(mean_returns)
+    args = (mean_returns, cov_matrix, risk_free_rate)
+    constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+    bound = (0.0,1.0)
+    bounds = tuple(bound for asset in range(num_assets))
+    result = sco.minimize(neg_sharpe_ratio, num_assets*[1./num_assets,], args=args,
+                        method='SLSQP', bounds=bounds, constraints=constraints)
+    return result
+
+def random_portfolios(num_portfolios, mean_returns, cov_matrix, risk_free_rate):
+    results = np.zeros((3,num_portfolios))
+    weights_record = []
+    for i in range(num_portfolios):
+        weights = np.random.random(mean_returns.shape[0])
+        weights /= np.sum(weights)
+        weights_record.append(weights)
+        portfolio_std_dev, portfolio_return = portfolio_annualised_performance(weights, mean_returns, cov_matrix)
+        results[0,i] = portfolio_std_dev
+        results[1,i] = portfolio_return
+        results[2,i] = (portfolio_return - risk_free_rate) / portfolio_std_dev
+    return results, weights_record
+
+
+def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate):
+    table = df.pivot(columns='ticker')
+    # By specifying col[1] in below list comprehension
+    # You can select the stock names under multi-level column
+    table.columns = [col[1] for col in table.columns]
+    table.head()
+    results, weights = random_portfolios(num_portfolios, mean_returns, cov_matrix, risk_free_rate)
+    max_sharpe_idx = np.argmax(results[2])
+    sdp, rp = results[0, max_sharpe_idx], results[1, max_sharpe_idx]
+    max_sharpe_allocation = pd.DataFrame(weights[max_sharpe_idx], index=table.columns, columns=['allocation'])
+    max_sharpe_allocation.allocation = [round(i * 100, 2) for i in max_sharpe_allocation.allocation]
+    max_sharpe_allocation = max_sharpe_allocation.T
+    min_vol_idx = np.argmin(results[0])
+    sdp_min, rp_min = results[0, min_vol_idx], results[1, min_vol_idx]
+    min_vol_allocation = pd.DataFrame(weights[min_vol_idx], index=table.columns, columns=['allocation'])
+    min_vol_allocation.allocation = [round(i * 100, 2) for i in min_vol_allocation.allocation]
+    min_vol_allocation = min_vol_allocation.T
+
+    print("-" * 80)
+    print("Maximum Sharpe Ratio Portfolio Allocation\n")
+    print("Annualised Return:", round(rp, 2))
+    print("Annualised Volatility:", round(sdp, 2))
+    print("\n")
+    print(max_sharpe_allocation)
+    print("-" * 80)
+    print("Minimum Volatility Portfolio Allocation\n")
+    print("Annualised Return:", round(rp_min, 2))
+    print("Annualised Volatility:", round(sdp_min, 2))
+    print("\n")
+    print(min_vol_allocation)
+
+
+    plt.figure(figsize=(10, 7))
+    plt.scatter(results[0, :], results[1, :], c=results[2, :], cmap='YlGnBu', marker='o', s=10, alpha=0.3)
+    plt.colorbar()
+    plt.scatter(sdp, rp, marker='*', color='r', s=500, label='Maximum Sharpe ratio')
+    plt.scatter(sdp_min, rp_min, marker='*', color='g', s=500, label='Minimum volatility')
+    plt.title('Simulated Portfolio Optimization based on Efficient Frontier')
+    plt.xlabel('annualised volatility')
+    plt.ylabel('annualised returns')
+    plt.legend(labelspacing=0.8)
 
 def calculate_weight(all_stocks_info,all_return_table,save_path):
     stocks_weight_table = pd.DataFrame([])
-
     for i in range(len(trade_date)):
         # get selected stocks information
-        p1_alldata=(all_stocks_info[trade_date[i]])
+        p1_alldata = all_stocks_info[trade_date[i]]
         # sort it by tic
-        p1_alldata=p1_alldata.sort_values('tic')
+        p1_alldata = p1_alldata.sort_values('tic')
         p1_alldata = p1_alldata.reset_index()
         del p1_alldata['index']
-    
-    
         # get selected stocks tic
         p1_stock = p1_alldata.tic
-        
-        # get predicted return from selected stocks
-        p1_predicted_return=p1_alldata.pivot_table(index = 'trade_date',columns = 'tic', values = 'predicted_return')
+
+        pivot_returns = all_return_table[trade_date[i]].pivot_table(index='datadate', columns='tic', values='daily_return')
         # use the predicted returns as the Expected returns to feed into the portfolio object
-        mu = p1_predicted_return.T.values
-    
-        # get the 1-year historical return
-        p1_return_table=all_return_table[trade_date[i]]
-        p1_return_table_pivot=p1_return_table.pivot_table(index = 'datadate',columns = 'tic', values = 'daily_return')
-        # use the 1-year historical return table to calculate covariance matrix between selected stocks
-        S = risk_models.sample_cov(p1_return_table_pivot)
-        #del S.index.name 
-        print(mu.shape, S.shape)
-        # mean variance
-        ef_mean = EfficientFrontier(mu, S,weight_bounds=(0, 1))
-        raw_weights_mean = ef_mean.max_sharpe()
-        cleaned_weights_mean = ef_mean.clean_weights()
+        mu, S = pivot_returns.mean(), pivot_returns.cov()
+        num_portfolios = 25000
+        risk_free_rate = 0.0178
+        results, weights = random_portfolios(num_portfolios, mu, S, risk_free_rate)
+        max_sharpe_idx = np.argmax(results[2])
+        sdp, rp = results[0, max_sharpe_idx], results[1, max_sharpe_idx]
+        max_sharpe_allocation = pd.DataFrame(weights[max_sharpe_idx], index=pivot_returns.columns, columns=['allocation'])
+        max_sharpe_allocation.allocation = [round(i * 100, 2) for i in max_sharpe_allocation.allocation]
+        print(max_sharpe_allocation.allocation)
+        # max_sharpe_allocation = list(max_sharpe_allocation.loc['allocation'].values)
+
+        min_vol_idx = np.argmin(results[0])
+        sdp_min, rp_min = results[0, min_vol_idx], results[1, min_vol_idx]
+        min_vol_allocation = pd.DataFrame(weights[min_vol_idx], index=pivot_returns.columns, columns=['allocation'])
+        min_vol_allocation.allocation = [round(i * 100, 2) for i in min_vol_allocation.allocation]
+        # min_vol_allocation = list(min_vol_allocation.loc['allocation'].values)
+
+        p1_alldata['mean_weight'] = list(max_sharpe_allocation.allocation.values)
+        p1_alldata['min_weight'] = list(min_vol_allocation.allocation.values)
+
+        print(p1_alldata.head())
+
+        print(f"sdp, rp, | {sdp}, {rp} :: sdp_min, rp_min | {sdp_min}, {rp_min}")
+
+        # # get predicted return from selected stocks
+        # p1_predicted_return=p1_alldata.pivot_table(index = 'trade_date',columns = 'tic', values = 'predicted_return')
+        # # use the predicted returns as the Expected returns to feed into the portfolio object
+        # mu = p1_predicted_return.T.values
+        #
+        # # get the 1-year historical return
+        # all_return_table = all_return_table.dropna()
+        # p1_return_table=all_return_table[trade_date[i]]
+        # p1_return_table_pivot=p1_return_table.pivot_table(index = 'datadate',columns = 'tic', values = 'daily_return')
+        # # use the 1-year historical return table to calculate covariance matrix between selected stocks
+        # S = risk_models.sample_cov(p1_return_table_pivot)
+        # #del S.index.name
+        # print(mu.shape, S.shape)
+        # # mean variance
+        # ef_mean = EfficientFrontier(mu, S,weight_bounds=(0, 1))
+        # raw_weights_mean = ef_mean.max_sharpe()
+        # cleaned_weights_mean = ef_mean.clean_weights()
         #print(raw_weights_mean)
         #ef.portfolio_performance(verbose=True)
     
-        # minimum variance
-        ef_min = EfficientFrontier([0]*len(p1_stock), S,weight_bounds=(0, 1))
-        raw_weights_min = ef_min.max_sharpe()
-        cleaned_weights_min = ef_min.clean_weights()
-        #print(cleaned_weights_min)
-        
-        p1_alldata['mean_weight'] = cleaned_weights_mean.values()
-        p1_alldata['min_weight'] = cleaned_weights_min.values()
-        
+        # # minimum variance
+        # ef_min = EfficientFrontier([0]*len(p1_stock), S,weight_bounds=(0, 1))
+        # raw_weights_min = ef_min.max_sharpe()
+        # cleaned_weights_min = ef_min.clean_weights()
+        # #print(cleaned_weights_min)
+        #
+        # p1_alldata['mean_weight'] = cleaned_weights_mean.values()
+        # p1_alldata['min_weight'] = cleaned_weights_min.values()
+        #
         #ef.portfolio_performance(verbose=True)
-    
-        
         stocks_weight_table = stocks_weight_table.append(pd.DataFrame(p1_alldata), ignore_index=True)
         print(trade_date[i], ": Done")
     stocks_weight_table.to_csv(save_path,index=False)
@@ -228,23 +332,6 @@ def process_price_table(input_file, price_start_date):
 
 
 
-### test
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import quandl
-import scipy.optimize as sco
-
-
-
-
-### test
-
-
-
-
-
 if __name__ == '__main__':
     selected_stock = select_top20_stocks()
     #selected_stock = pd.read_csv('top20_stocks_20210926.csv')
@@ -252,15 +339,13 @@ if __name__ == '__main__':
     price_start_date = dt.datetime.strptime(str(min(trade_date)),'%Y%m%d') + dt.timedelta(-122) 
     price_start_date = int(dt.datetime.strftime(price_start_date, '%Y%m%d'))
     input_file = 'raw_data/russeTop600_stock_df.csv'
-
-    df_price = process_price_table('raw-data/russel3000_stock.csv', price_start_date)
-
+    df_price = process_price_table('raw_data/russel3000_stock.csv', price_start_date)
     print(selected_stock.tic.unique().shape)
     print(df_price.tic.unique().shape)
     all_stocks_info,  all_return_table  = get_return_and_info_table(selected_stock,df_price)
     print(len(all_stocks_info))
     print(len(all_return_table))
-    
+
     stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,f"stocks_weight_table{today}.csv")
     print(stocks_weight_table.shape)
     print(stocks_weight_table.head())
