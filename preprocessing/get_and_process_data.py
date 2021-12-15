@@ -352,6 +352,7 @@ def split_sector(final_df,final_df_top20, folder_path='Data/pre-focasting_data/'
     filtered_russell_top_20 = final_df_top20.tic.unique()
     final_df.loc[:,'filter_idx'] = final_df.loc[:,'tic'].apply(lambda x: x in filtered_russell_top_20)
     final_df = final_df.loc[final_df.loc[:,'filter_idx']==True]
+    dfs_filtered = []
     for sector in gsectors:
         sector_df = final_df[final_df.gsector == sector]
         sector_df.loc[:,'risk_level'] = pd.qcut(sector_df.loc[:,'X6_PS'], 3, labels=["low", "medium", "high"])
@@ -360,4 +361,7 @@ def split_sector(final_df,final_df_top20, folder_path='Data/pre-focasting_data/'
         for file_to_save, risk_level in zip([file_low, file_medium, file_high], ['low', 'medium', 'high']):
             sector_df_curr_risk_level = sector_df.loc[sector_df.loc[:,'risk_level'] == risk_level, ]
             sector_df_curr_risk_level.to_csv(os.path.join(folder_path, file_to_save),index=False)
+            dfs_filtered.append(sector_df_curr_risk_level)
+    final_df_filtered = pd.concat(dfs_filtered).sort_values(['risk_level', 'tradedate'], ascending=[True, False])
+    return final_df_filtered
 

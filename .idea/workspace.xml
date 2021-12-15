@@ -5,12 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dfc9afb7-49c6-402f-b873-0e74f4050518" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Data/pre-focasting_data.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/fundamental_run_model_refactored.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundamental_run_model_refactored.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/preprocessing/get_and_process_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/preprocessing/get_and_process_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/select_top20.py" beforeDir="false" afterPath="$PROJECT_DIR$/select_top20.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/top20_by_sector.py" beforeDir="false" afterPath="$PROJECT_DIR$/top20_by_sector.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +112,7 @@
       <workItem from="1638577230964" duration="1000" />
       <workItem from="1638577323181" duration="862000" />
       <workItem from="1638636134265" duration="471000" />
-      <workItem from="1638724441288" duration="22597000" />
+      <workItem from="1638724441288" duration="69533000" />
     </task>
     <servers />
   </component>

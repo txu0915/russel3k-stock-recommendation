@@ -18,114 +18,38 @@ import scipy.optimize as sco
 # from pypfopt.efficient_frontier import EfficientFrontier
 # from pypfopt import risk_models
 import os
+from top20_by_sector import *
 
+def select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered,sectors_by_portfolio_types):
+    final_df_filtered.index = list(range(final_df_filtered.index.shape[0]))
+    risk_levels = ['high','medium','low']
+    top20_by_portfolio_types = []
+    for k, v in sectors_by_portfolio_types.items():
+        predicted_df_by_portfolio_types = []
+        for i, gsector in enumerate(v['gsector']):
+            predicted_df = pd.read_csv(os.path.join(predicted_returns_dir, f"sector{gsector}/df_predict_best.csv"))
+            nearest_trade_date = sorted(predicted_df.iloc[:, 0])[-1]
+            my_predicted_returns = list(predicted_df.iloc[-1, 1:].values)
+            all_tics_in_sector = predicted_df.columns[1:]
+            cur_df = pd.DataFrame({'predicted_returns': my_predicted_returns, 'tic': all_tics_in_sector,
+                                   'sector':[v['GICS'][i]]*len(my_predicted_returns), 'tradedate':[nearest_trade_date]*len(my_predicted_returns)})
+            predicted_df_by_portfolio_types.append(cur_df)
+        predicted_df_by_portfolio_types = pd.concat(predicted_df_by_portfolio_types)
+        predicted_df_by_portfolio_types['portfolio_type'] = k
+        predicted_df_by_portfolio_types.index = list(range(predicted_df_by_portfolio_types.index.shape[0]))
 
-today = dt.datetime.today().strftime('%Y%m%d')
+        for level in risk_levels:
+            cur_result = pd.merge(final_df_filtered, predicted_df_by_portfolio_types, how='inner', on=['tic', 'tradedate'])
+            cur_result = cur_result.loc[:, ['predicted_returns', 'tradedate', 'tic', 'risk_level', 'portfolio_type']]
+            cur_result = cur_result.loc[cur_result.loc[:,'risk_level']==level,:].drop_duplicates()
+            cur_result = cur_result.sort_values(['tradedate','predicted_returns'], ascending=[False, False]).iloc[:20]
+            top20_by_portfolio_types.append(cur_result)
 
-def select_top20_risk_sector_stocks(final_file_prefix, final_file_folder, output_path):
-    final_folder_file_list = os.listdir(final_file_folder)
-    final_file_list = []
-    for file in final_folder_file_list:
-        if final_file_prefix in file and '.csv' in file:
-            final_file_list.append(file)
-    max_trade_date = max(final_file_list).split('_')[-1][:-4]
-    final_fa_file = os.path.join(final_file_folder,final_file_prefix+'_'+max_trade_date+'.csv')
-    final_fa_df = pd.read_csv(final_fa_file)
-    final_fa_df = final_fa_df.sort_values(['tic','datadate']).drop_duplicates(subset = ['tradedate','tic'],keep='last')
-    mapping_sectors = {'Technology': 'Tech Stocks',
-                     'Basic Materials': 'Cyclical Stocks',
-                     'Consumer Cyclical': 'Cyclical Stocks',
-                     'Financial Services': 'Cyclical Stocks',
-                     'Real Estate': 'Cyclical Stocks',
-                     'Consumer Defensive': 'Defensive Stocks',
-                     'Utilities': 'Defensive Stocks',
-                     'Industrials': 'Other stocks',
-                     'Healthcare': 'Other stocks',
-                     'Communication Services': 'Other stocks',
-                     'Energy': 'Other stocks'}
-
-    sector_list = []
-    for i in range(11):
-        sector = f'sector{i*5+10}'
-        sector_list.append(sector)
-    all_pred_list = []
-    for sector in sector_list:
-        if os.path.exists(f'results/{sector}/df_predict_best.csv'):
-            sect_df = pd.read_csv(f'results/{sector}/df_predict_best.csv')
-            res = pd.DataFrame(sect_df.iloc[:, 1:].values.T)
-            res.columns = sect_df.iloc[:,0].tolist()
-            res['tic'] = sect_df.columns[1:]
-            res['sector'] = sector
-            all_pred_list.append(res)    
-    all_pred_df = pd.concat(all_pred_list)
-    trading_dates = list(all_pred_df.columns[:-2])
-    
-    res_list = []
-    for trade_date in trading_dates:
-        pred_df = all_pred_df[[trade_date,'tic','sector']]
-        pred_df = pred_df.rename(columns={trade_date:'predicted_return'})
-        pred_df['trade_date'] = trade_date
-        fa_df = final_fa_df[final_fa_df['tradedate'] == trade_date][['X6_PS', 'GICS Sector','tic']]
-        pred_final = pred_df.join(fa_df.set_index('tic'),on='tic',how='left').dropna()
-        pred_final['koin_sector'] = pred_final['GICS Sector'].apply(lambda x: mapping_sectors[x])
-        koin_sectors = pred_final['koin_sector'].unique().tolist()
-        for koin_sector in koin_sectors:
-            koin_sector_df = pred_final[pred_final['koin_sector'] == koin_sector]
-            if len(koin_sector_df) < 3:
-                koin_sector_df['risk_level'] = 'medium'
-            else:
-                
-                koin_sector_df['risk_level'] = pd.qcut(koin_sector_df['X6_PS'], q=3,labels=['low','medium','high'])
-            risk_levels = koin_sector_df['risk_level'].unique().tolist()
-
-            for risk_level in risk_levels:
-                one_risk_df = koin_sector_df[koin_sector_df['risk_level']==risk_level]
-                one_risk_df = one_risk_df.sort_values('predicted_return',ascending=False)
-                if len(one_risk_df) <= 20:
-                    res_list.append(one_risk_df)
-                else:               
-                    res_list.append(one_risk_df.iloc[:20])    
-    res_final= pd.concat(res_list)
-    res_final.to_csv(output_path)
-    return res_final
-
-    
-    
-    
-def select_top20_stocks():
-    sector_list = []
-    for i in range(11):
-        sector = f'sector{i*5+10}'
-        sector_list.append(sector)
-    res_list = []
-    for sector in sector_list:
-        if os.path.exists(f'results/{sector}/df_predict_best.csv'):
-            sect_df = pd.read_csv(f'results/{sector}/df_predict_best.csv')
-            res = pd.DataFrame(sect_df.iloc[:, 1:].values.T)
-            res.columns = sect_df.iloc[:,0].astype(str).tolist()
-            res['tic'] = sect_df.columns[1:]
-            res['sector'] = sector
-            trading_dates = sect_df.iloc[:,0].astype(str)
-        
-            for i in range(len(trading_dates)):
-                one_trade_rank = res[[trading_dates[i],'tic','sector']].dropna().sort_values(trading_dates[i],ascending=False)
-                if len(one_trade_rank) >= 5:
-                    #top20 = one_trade_rank.iloc[:int(0.2 * len(one_trade_rank))]
-                    top20 = one_trade_rank.iloc[:20]
-                    top20['trade_date'] = int(trading_dates[i])
-                    top20 = top20.rename(columns={trading_dates[i]:"predicted_return"})
-                    res_list.append(top20)
-    if len(res_list) > 0 :
-        top20_df = pd.concat(res_list).sort_values(['trade_date','predicted_return'],ascending=[False, False])
-        top20_df.to_csv(f'top20_stocks_{today}.csv',index=False)
-    
-        return top20_df
-    return None
-
+    return top20_by_portfolio_types
 
 
 def get_return_and_info_table(selected_stock,df_price):
-    trade_date=selected_stock.trade_date.unique()
+    trade_date=list(selected_stock.tradedate.unique())
     all_date=df_price.datadate.unique()
     all_return_table={}
     #all_predicted_return={}
@@ -133,16 +57,15 @@ def get_return_and_info_table(selected_stock,df_price):
     #for i in range(0,1):
     for i in range(len(trade_date)):
         #match trading date
-        index = selected_stock.trade_date==trade_date[i]
-        print(trade_date[i])
+        index = selected_stock.tradedate==trade_date[i]
         #get the corresponding trade period's selected stocks' name
-        stocks_name=selected_stock.tic[selected_stock.trade_date==trade_date[i]].values
-        temp_info = selected_stock[selected_stock.trade_date==trade_date[i]]
+        stocks_name=selected_stock.tic[selected_stock.tradedate==trade_date[i]].values
+        temp_info = selected_stock[selected_stock.tradedate==trade_date[i]]
         temp_info = temp_info.reset_index()
         del temp_info['index']
         all_stocks_info[trade_date[i]] = temp_info
         #get the corresponding trade period's selected stocks' predicted return
-        asset_expected_return=selected_stock[index].predicted_return.values
+        #asset_expected_return=selected_stock[index].predicted_returns.values
         #get current trade date and calculate trade date last year, it has to be a business date
         last_year_tradedate=int((trade_date[i]-round(trade_date[i]/10000)*10000)+round(trade_date[i]/10000-1)*10000)
         convert_to_yyyymmdd=dt.datetime.strptime(str(last_year_tradedate), '%Y%m%d').strftime('%Y-%m-%d')
@@ -204,61 +127,17 @@ def random_portfolios(num_portfolios, mean_returns, cov_matrix, risk_free_rate):
     return results, weights_record
 
 
-def display_simulated_ef_with_random(mean_returns, cov_matrix, num_portfolios, risk_free_rate):
-    table = df.pivot(columns='ticker')
-    # By specifying col[1] in below list comprehension
-    # You can select the stock names under multi-level column
-    table.columns = [col[1] for col in table.columns]
-    table.head()
-    results, weights = random_portfolios(num_portfolios, mean_returns, cov_matrix, risk_free_rate)
-    max_sharpe_idx = np.argmax(results[2])
-    sdp, rp = results[0, max_sharpe_idx], results[1, max_sharpe_idx]
-    max_sharpe_allocation = pd.DataFrame(weights[max_sharpe_idx], index=table.columns, columns=['allocation'])
-    max_sharpe_allocation.allocation = [round(i * 100, 2) for i in max_sharpe_allocation.allocation]
-    max_sharpe_allocation = max_sharpe_allocation.T
-    min_vol_idx = np.argmin(results[0])
-    sdp_min, rp_min = results[0, min_vol_idx], results[1, min_vol_idx]
-    min_vol_allocation = pd.DataFrame(weights[min_vol_idx], index=table.columns, columns=['allocation'])
-    min_vol_allocation.allocation = [round(i * 100, 2) for i in min_vol_allocation.allocation]
-    min_vol_allocation = min_vol_allocation.T
-
-    print("-" * 80)
-    print("Maximum Sharpe Ratio Portfolio Allocation\n")
-    print("Annualised Return:", round(rp, 2))
-    print("Annualised Volatility:", round(sdp, 2))
-    print("\n")
-    print(max_sharpe_allocation)
-    print("-" * 80)
-    print("Minimum Volatility Portfolio Allocation\n")
-    print("Annualised Return:", round(rp_min, 2))
-    print("Annualised Volatility:", round(sdp_min, 2))
-    print("\n")
-    print(min_vol_allocation)
-
-
-    plt.figure(figsize=(10, 7))
-    plt.scatter(results[0, :], results[1, :], c=results[2, :], cmap='YlGnBu', marker='o', s=10, alpha=0.3)
-    plt.colorbar()
-    plt.scatter(sdp, rp, marker='*', color='r', s=500, label='Maximum Sharpe ratio')
-    plt.scatter(sdp_min, rp_min, marker='*', color='g', s=500, label='Minimum volatility')
-    plt.title('Simulated Portfolio Optimization based on Efficient Frontier')
-    plt.xlabel('annualised volatility')
-    plt.ylabel('annualised returns')
-    plt.legend(labelspacing=0.8)
-
-def calculate_weight(all_stocks_info,all_return_table,save_path):
+def calculate_weight(all_stocks_info, all_return_table, trade_dates, save_path):
     stocks_weight_table = pd.DataFrame([])
-    for i in range(len(trade_date)):
+    for i in range(len(trade_dates)):
         # get selected stocks information
-        p1_alldata = all_stocks_info[trade_date[i]]
+        p1_alldata = all_stocks_info[trade_dates[i]]
         # sort it by tic
         p1_alldata = p1_alldata.sort_values('tic')
         p1_alldata = p1_alldata.reset_index()
         del p1_alldata['index']
         # get selected stocks tic
-        p1_stock = p1_alldata.tic
-
-        pivot_returns = all_return_table[trade_date[i]].pivot_table(index='datadate', columns='tic', values='daily_return')
+        pivot_returns = all_return_table[trade_dates[i]].pivot_table(index='datadate', columns='tic', values='daily_return')
         # use the predicted returns as the Expected returns to feed into the portfolio object
         mu, S = pivot_returns.mean(), pivot_returns.cov()
         num_portfolios = 25000
@@ -266,56 +145,20 @@ def calculate_weight(all_stocks_info,all_return_table,save_path):
         results, weights = random_portfolios(num_portfolios, mu, S, risk_free_rate)
         max_sharpe_idx = np.argmax(results[2])
         sdp, rp = results[0, max_sharpe_idx], results[1, max_sharpe_idx]
+        print(weights[max_sharpe_idx], weights[max_sharpe_idx].shape)
         max_sharpe_allocation = pd.DataFrame(weights[max_sharpe_idx], index=pivot_returns.columns, columns=['allocation'])
         max_sharpe_allocation.allocation = [round(i * 100, 2) for i in max_sharpe_allocation.allocation]
         print(max_sharpe_allocation.allocation)
-        # max_sharpe_allocation = list(max_sharpe_allocation.loc['allocation'].values)
-
         min_vol_idx = np.argmin(results[0])
         sdp_min, rp_min = results[0, min_vol_idx], results[1, min_vol_idx]
         min_vol_allocation = pd.DataFrame(weights[min_vol_idx], index=pivot_returns.columns, columns=['allocation'])
         min_vol_allocation.allocation = [round(i * 100, 2) for i in min_vol_allocation.allocation]
-        # min_vol_allocation = list(min_vol_allocation.loc['allocation'].values)
-
         p1_alldata['mean_weight'] = list(max_sharpe_allocation.allocation.values)
         p1_alldata['min_weight'] = list(min_vol_allocation.allocation.values)
-
         print(p1_alldata.head())
-
         print(f"sdp, rp, | {sdp}, {rp} :: sdp_min, rp_min | {sdp_min}, {rp_min}")
-
-        # # get predicted return from selected stocks
-        # p1_predicted_return=p1_alldata.pivot_table(index = 'trade_date',columns = 'tic', values = 'predicted_return')
-        # # use the predicted returns as the Expected returns to feed into the portfolio object
-        # mu = p1_predicted_return.T.values
-        #
-        # # get the 1-year historical return
-        # all_return_table = all_return_table.dropna()
-        # p1_return_table=all_return_table[trade_date[i]]
-        # p1_return_table_pivot=p1_return_table.pivot_table(index = 'datadate',columns = 'tic', values = 'daily_return')
-        # # use the 1-year historical return table to calculate covariance matrix between selected stocks
-        # S = risk_models.sample_cov(p1_return_table_pivot)
-        # #del S.index.name
-        # print(mu.shape, S.shape)
-        # # mean variance
-        # ef_mean = EfficientFrontier(mu, S,weight_bounds=(0, 1))
-        # raw_weights_mean = ef_mean.max_sharpe()
-        # cleaned_weights_mean = ef_mean.clean_weights()
-        #print(raw_weights_mean)
-        #ef.portfolio_performance(verbose=True)
-    
-        # # minimum variance
-        # ef_min = EfficientFrontier([0]*len(p1_stock), S,weight_bounds=(0, 1))
-        # raw_weights_min = ef_min.max_sharpe()
-        # cleaned_weights_min = ef_min.clean_weights()
-        # #print(cleaned_weights_min)
-        #
-        # p1_alldata['mean_weight'] = cleaned_weights_mean.values()
-        # p1_alldata['min_weight'] = cleaned_weights_min.values()
-        #
-        #ef.portfolio_performance(verbose=True)
         stocks_weight_table = stocks_weight_table.append(pd.DataFrame(p1_alldata), ignore_index=True)
-        print(trade_date[i], ": Done")
+        print(trade_dates[i], ": Done")
     stocks_weight_table.to_csv(save_path,index=False)
     return stocks_weight_table
     
@@ -333,19 +176,32 @@ def process_price_table(input_file, price_start_date):
 
 
 if __name__ == '__main__':
-    selected_stock = select_top20_stocks()
-    #selected_stock = pd.read_csv('top20_stocks_20210926.csv')
-    trade_date=selected_stock.trade_date.unique()
-    price_start_date = dt.datetime.strptime(str(min(trade_date)),'%Y%m%d') + dt.timedelta(-122) 
-    price_start_date = int(dt.datetime.strftime(price_start_date, '%Y%m%d'))
-    input_file = 'raw_data/russeTop600_stock_df.csv'
-    df_price = process_price_table('raw_data/russel3000_stock.csv', price_start_date)
-    print(selected_stock.tic.unique().shape)
-    print(df_price.tic.unique().shape)
-    all_stocks_info,  all_return_table  = get_return_and_info_table(selected_stock,df_price)
-    print(len(all_stocks_info))
-    print(len(all_return_table))
+    ## generate portfolio type and sectors mapping
+    today = dt.datetime.today().strftime('%Y%m%d')
+    predicted_returns_dir, outp_fp = 'results', "top20-ressull3000-based-on-sharpe-ratio.csv"
+    final_df = pd.read_csv('--ress3k_fundamental_final.csv')
+    final_df_top20 = pd.read_csv(outp_fp)
+    final_df_filtered = split_sector(final_df, final_df_top20)
+    sectors_by_portfolio_types = {'tech': {'GICS':['Technology', 'Communication Services'],'gsector':[30, 60]},
+                                  'cyclical':{'GICS':['Basic Materials', 'Real Estate',
+                                                      'Financial Services','Industrials','Consumer Cyclical'],
+                                              'gsector':[15, 35, 40, 20,25]},
+                                  'defensive':{'GICS':['Utilities', 'Consumer Defensive'],'gsector':[55, 45]},
+                                  'all':{'GICS':['Healthcare', 'Basic Materials', 'Industrials',
+                                                'Consumer Cyclical', 'Technology', 'Real Estate',
+                                                'Financial Services', 'Consumer Defensive', 'Energy',
+                                                'Utilities','Communication Services', 'unknown'],
+                                         'gsector':[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]}}
 
-    stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,f"stocks_weight_table{today}.csv")
-    print(stocks_weight_table.shape)
-    print(stocks_weight_table.head())
+    top20_by_portfolio_types = select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered, sectors_by_portfolio_types)
+    trade_dates = list(np.unique(list(map(lambda x: x.tradedate.unique()[0], top20_by_portfolio_types))))
+    price_start_date = dt.datetime.strptime(str(min(trade_dates)),'%Y%m%d') + dt.timedelta(-365)
+    price_start_date = int(dt.datetime.strftime(price_start_date, '%Y%m%d'))
+    # input_file = 'raw_data/russeTop600_stock_df.csv'
+    df_price = process_price_table('raw_data/russel3000_stock.csv', price_start_date)
+    for i, top20_by_portfolio_type in enumerate(top20_by_portfolio_types):
+        weights_res_dir = 'results/weights'
+        risk, portfolio_type = top20_by_portfolio_type.risk_level.unique()[0], top20_by_portfolio_type.portfolio_type.unique()[0]
+        fp_output = f"stocks_weight_table{today}_{risk}_{portfolio_type}.csv"
+        all_stocks_info,  all_return_table  = get_return_and_info_table(top20_by_portfolio_type,df_price)
+        stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,trade_dates, os.path.join(weights_res_dir,fp_output))

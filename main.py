@@ -31,14 +31,14 @@ if pull_data:
 
     gvkey_conm = pd.read_csv('conm_tic.csv')
     gvkey_conm_unique = gvkey_conm.drop_duplicates(subset=['tic']).set_index('tic')
-    km_df = get_tics_key_metrics('raw-data/russel3000_km.csv', russell3000_tics)
-    fa_df = get_tics_incom_states('raw-data/russel3000_fa.csv',russell3000_tics)
-    stock_df = get_stocks_data('raw-data/russel3000_stock.csv',russell3000_tics,3600)
+    #km_df = get_tics_key_metrics('raw_data/russel3000_km.csv', russell3000_tics)
+    #fa_df = get_tics_incom_states('raw_data/russel3000_fa.csv',russell3000_tics)
+    stock_df = get_stocks_data('raw_data/russel3000_stock.csv',russell3000_tics,3600)
 
 # =============================================================================
-#         km_df = pd.read_csv('raw_data/russeTop600_km_df.csv')
-#         fa_df = pd.read_csv('raw_data/russeTop600_fa_df.csv')
-#         stock_df = pd.read_csv('raw_data/russeTop600_stock_df.csv')
+    km_df = pd.read_csv('raw_data/russel3000_km.csv')
+    fa_df = pd.read_csv('raw_data/russel3000_fa.csv')
+    stock_df = pd.read_csv('raw_data/russel3000_stock.csv')
 # =============================================================================
 
     final_file_prefix = os.path.join(final_file_folder, final_file_prefix)
@@ -46,13 +46,11 @@ if pull_data:
     outp_fp = "top20-ressull3000-based-on-sharpe-ratio.csv"
     final_df_top20 = get_top20(get_res_df(final_df), outp_fp)
 
-    split_sector(final_df,final_df_top20)
+    final_df_filtered = split_sector(final_df,final_df_top20)
     print(final_df_top20.shape,final_df_top20.head(),final_df_top20.columns)
 
     ## read back data for test...
-    # final_df = pd.read_csv('--ress3k_fundamental_final.csv')
-    # final_df_top20 = pd.read_csv("top20-ressull3000.csv")
-    # split_sector(final_df, final_df_top20)
+
 
 
 

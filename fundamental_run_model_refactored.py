@@ -12,13 +12,13 @@ from ml_model import *
 import time
 
 inputfile_fundamental = "--ress3k_fundamental_final.csv"
-input_sector_dir = '/Users/tianlong/Downloads/russe3K_stock_recommendation/Data/pre-focasting_data'
+input_sector_dir = 'Data/pre-focasting_data'
 fundamental_total = pd.read_csv(inputfile_fundamental)
 unique_sectors_files = list(map(lambda x: f'sector{x}-v2.csv', fundamental_total.gsector.unique()))
 
 for sector_file in unique_sectors_files:
-    if sector_file != 'sector60-v2.csv':
-        continue
+    # if sector_file != 'sector60-v2.csv':
+    #     continue
     print(f'now processing sector {sector_file}')
     inputfile_sector = sector_file
     sector_data = pd.read_csv(input_sector_dir+'/'+inputfile_sector)
