@@ -12,13 +12,11 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import quandl
 import scipy.optimize as sco
 # from pypfopt.efficient_frontier import EfficientFrontier
 # from pypfopt import risk_models
 import os
-from top20_by_sector import *
+from py_scripts.top20_by_sector import *
 
 def select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered,sectors_by_portfolio_types):
     final_df_filtered.index = list(range(final_df_filtered.index.shape[0]))
@@ -181,7 +179,9 @@ if __name__ == '__main__':
     predicted_returns_dir, outp_fp = 'results', "top20-ressull3000-based-on-sharpe-ratio.csv"
     final_df = pd.read_csv('--ress3k_fundamental_final.csv')
     final_df_top20 = pd.read_csv(outp_fp)
-    final_df_filtered = split_sector(final_df, final_df_top20)
+    #final_df_filtered = split_sector(final_df, final_df_top20)
+    pre_focasting_dir = 'pre-focasting_data'
+    final_df_filtered = pd.read_csv(os.path.join(pre_focasting_dir,'final_df_filtered.csv'))
     sectors_by_portfolio_types = {'tech': {'GICS':['Technology', 'Communication Services'],'gsector':[30, 60]},
                                   'cyclical':{'GICS':['Basic Materials', 'Real Estate',
                                                       'Financial Services','Industrials','Consumer Cyclical'],
@@ -202,6 +202,6 @@ if __name__ == '__main__':
     for i, top20_by_portfolio_type in enumerate(top20_by_portfolio_types):
         weights_res_dir = 'results/weights'
         risk, portfolio_type = top20_by_portfolio_type.risk_level.unique()[0], top20_by_portfolio_type.portfolio_type.unique()[0]
-        fp_output = f"stocks_weight_table{today}_{risk}_{portfolio_type}.csv"
+        fp_output = f"stocks_weight_table_{risk}_{portfolio_type}.csv"
         all_stocks_info,  all_return_table  = get_return_and_info_table(top20_by_portfolio_type,df_price)
         stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,trade_dates, os.path.join(weights_res_dir,fp_output))

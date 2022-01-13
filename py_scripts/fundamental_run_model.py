@@ -6,7 +6,7 @@ import numpy as np
 import time
 import traceback
 import sys
-sys.path.append('models')
+sys.path.append('../models')
 import ml_model
 
 

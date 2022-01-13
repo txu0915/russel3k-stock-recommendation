@@ -8,11 +8,11 @@ import traceback
 import sys
 import os
 sys.path.append('models')
-from ml_model import *
+from py_scripts.ml_model import *
 import time
 
 inputfile_fundamental = "--ress3k_fundamental_final.csv"
-input_sector_dir = 'Data/pre-focasting_data'
+input_sector_dir = 'pre-focasting_data'
 fundamental_total = pd.read_csv(inputfile_fundamental)
 unique_sectors_files = list(map(lambda x: f'sector{x}-v2.csv', fundamental_total.gsector.unique()))
 

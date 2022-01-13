@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import pandas as pd
 
-from preprocessing.get_and_process_data import *
+from py_scripts.get_and_process_data import *
 import os
-from top20_by_sector import *
+from py_scripts.top20_by_sector import *
 
 
 # if __name__ == '__main__':

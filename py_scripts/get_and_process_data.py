@@ -346,7 +346,7 @@ def create_dir_if_needed(filepath):
     if not os.path.isdir(dir):
         os.makedirs(dir)
     
-def split_sector(final_df,final_df_top20, folder_path='Data/pre-focasting_data/'):
+def split_sector(final_df,final_df_top20, folder_path='pre-focasting_data/'):
     create_dir_if_needed(folder_path)
     gsectors = final_df.gsector.unique()
     filtered_russell_top_20 = final_df_top20.tic.unique()
@@ -363,5 +363,6 @@ def split_sector(final_df,final_df_top20, folder_path='Data/pre-focasting_data/'
             sector_df_curr_risk_level.to_csv(os.path.join(folder_path, file_to_save),index=False)
             dfs_filtered.append(sector_df_curr_risk_level)
     final_df_filtered = pd.concat(dfs_filtered).sort_values(['risk_level', 'tradedate'], ascending=[True, False])
+    final_df_filtered.to_csv(os.path.join(folder_path,'final_df_filtered.csv'), index=False)
     return final_df_filtered
 

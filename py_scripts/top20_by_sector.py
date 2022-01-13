@@ -41,15 +41,3 @@ def get_top20(df_result,outp_fp=None):
     if outp_fp:
         df_res.to_csv(outp_fp)
     return df_res
-
-
-def run(fp,outp_fp=None):
-	'''
-		fp: your input csv file path
-		outp_fp: your final output csv path
-	'''
-
-	df = pd.read_csv(fp)
-	return get_top20(get_res_df(df), outp_fp)
-
-## updates: change to risk-adjusted return
