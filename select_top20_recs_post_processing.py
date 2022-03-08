@@ -205,3 +205,58 @@ if __name__ == '__main__':
         fp_output = f"stocks_weight_table_{risk}_{portfolio_type}.csv"
         all_stocks_info,  all_return_table  = get_return_and_info_table(top20_by_portfolio_type,df_price)
         stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,trade_dates, os.path.join(weights_res_dir,fp_output))
+
+    historical_return_std = final_df_filtered.groupby('tic', as_index=False)['y_return'].agg({'historical_std':np.std})
+    balance_sharp = final_df_top20
+
+    tic2portfolio_type = {}
+    for i, row in final_df_filtered.iterrows():
+        if row.gsector in [30, 60]:
+            tic2portfolio_type[row.tic] = 'tech'
+        elif row.gsector in [15, 35, 40, 20,25]:
+            tic2portfolio_type[row.tic] = 'cyclical'
+        elif row.gsector in [55, 45]:
+            tic2portfolio_type[row.tic] = 'defensive'
+        else:
+            tic2portfolio_type[row.tic] = 'all'
+
+    historical_return_std['portfolio_type'] = ""
+    for i, row in historical_return_std.iterrows():
+        historical_return_std.loc[i,'portfolio_type'] = tic2portfolio_type[row.tic]
+
+    historical_return_std.to_csv("stock_recommendation_by_historical_return_variance.csv",index=False)
+
+    balance_sharp['portfolio_type'] = ""
+    for i, row in balance_sharp.iterrows():
+        balance_sharp.loc[i, 'portfolio_type'] = tic2portfolio_type[row.tic]
+
+    balance_sharp.loc[:,['tic', 'norm_gain', 'portfolio_type']].to_csv("stock_recommendation_by_balance_sharp.csv", index=False)
+
+
+    my_preds_return_sharp_ratio = []
+    for file in os.listdir(weights_res_dir):
+        if file.endswith('.csv'):
+            my_preds_return_sharp_ratio.append(pd.read_csv(os.path.join(weights_res_dir,file)))
+
+
+    preds_return = pd.concat(my_preds_return_sharp_ratio,axis=0)
+
+    preds_return['mean_weight'] = preds_return['mean_weight']/3.0
+    preds_return['min_weight'] = preds_return['min_weight'] / 3.0
+
+    counts = preds_return.groupby('portfolio_type',as_index=False)['tic'].agg({'count':'count'})
+    preds_return = pd.merge(preds_return,counts,how='left',on='portfolio_type')
+    preds_return['avg_allocation'] = 100./preds_return['count']
+    preds_return['efficient_frontier_allocation'] = preds_return['mean_weight']
+
+    preds_return = preds_return.loc[:,['tic','predicted_returns', 'tradedate', 'portfolio_type',
+       'mean_weight', 'avg_allocation']]
+
+    preds_return.to_csv("stock_recommendation_by_max_predicted_return.csv", index=False)
+
+
+
+
+
+
+

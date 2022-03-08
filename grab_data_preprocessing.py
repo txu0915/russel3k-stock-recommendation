@@ -30,8 +30,8 @@ if pull_data:
 
     gvkey_conm = pd.read_csv('conm_tic.csv')
     gvkey_conm_unique = gvkey_conm.drop_duplicates(subset=['tic']).set_index('tic')
-    #km_df = get_tics_key_metrics('raw_data/russel3000_km.csv', russell3000_tics)
-    #fa_df = get_tics_incom_states('raw_data/russel3000_fa.csv',russell3000_tics)
+    km_df = get_tics_key_metrics('raw_data/russel3000_km.csv', russell3000_tics)
+    fa_df = get_tics_incom_states('raw_data/russel3000_fa.csv',russell3000_tics)
     stock_df = get_stocks_data('raw_data/russel3000_stock.csv',russell3000_tics,3600)
 
 # =============================================================================
@@ -48,7 +48,8 @@ if pull_data:
     final_df_filtered = split_sector(final_df,final_df_top20)
     print(final_df_top20.shape,final_df_top20.head(),final_df_top20.columns)
 
-    ## read back data for test...
+    ##
+    final_df_filtered.groupby('tic', as_index=False)['y_return'].agg({'historical_std':np.std})
 
 
 
