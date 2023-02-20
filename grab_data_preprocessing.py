@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import pandas as pd
 
 from py_scripts.get_and_process_data import *
 import os
@@ -45,12 +46,15 @@ if pull_data:
     outp_fp = "top20-ressull3000-based-on-sharpe-ratio.csv"
     final_df_top20 = get_top20(get_res_df(final_df), outp_fp)
 
+
     final_df_filtered = split_sector(final_df,final_df_top20)
+    final_df_filtered_v3 = split_sector(final_df, final_df, version_code='v3')
     print(final_df_top20.shape,final_df_top20.head(),final_df_top20.columns)
 
-    ##
-    final_df_filtered.groupby('tic', as_index=False)['y_return'].agg({'historical_std':np.std})
-
-
-
+    # ##
+    # final_df_filtered.groupby('tic', as_index=False)['y_return'].agg({'historical_std':np.std})
+    #
+    # ######
+    # final_df_top20 = pd.read_csv('top20-ressull3000-based-on-sharpe-ratio.csv')
+    #
 

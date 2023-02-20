@@ -41,3 +41,4 @@ def get_top20(df_result,outp_fp=None):
     if outp_fp:
         df_res.to_csv(outp_fp)
     return df_res
+

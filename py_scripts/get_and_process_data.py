@@ -346,7 +346,7 @@ def create_dir_if_needed(filepath):
     if not os.path.isdir(dir):
         os.makedirs(dir)
     
-def split_sector(final_df,final_df_top20, folder_path='pre-focasting_data/'):
+def split_sector(final_df, final_df_top20, version_code = 'v2', folder_path='pre-focasting_data/'):
     create_dir_if_needed(folder_path)
     gsectors = final_df.gsector.unique()
     filtered_russell_top_20 = final_df_top20.tic.unique()
@@ -356,7 +356,7 @@ def split_sector(final_df,final_df_top20, folder_path='pre-focasting_data/'):
     for sector in gsectors:
         sector_df = final_df[final_df.gsector == sector]
         sector_df.loc[:,'risk_level'] = pd.qcut(sector_df.loc[:,'X6_PS'], 3, labels=["low", "medium", "high"])
-        file, file_low, file_medium, file_high = f'sector{sector}-v2.csv', f'sector{sector}-v2-low-risk.csv', f'sector{sector}-v2-medium-risk.csv', f'sector{sector}-v2-high-risk.csv'
+        file, file_low, file_medium, file_high = f'sector{sector}-{version_code}.csv', f'sector{sector}-{version_code}-low-risk.csv', f'sector{sector}-{version_code}-medium-risk.csv', f'sector{sector}-{version_code}-high-risk.csv'
         sector_df.to_csv(os.path.join(folder_path, file),index=False)
         for file_to_save, risk_level in zip([file_low, file_medium, file_high], ['low', 'medium', 'high']):
             sector_df_curr_risk_level = sector_df.loc[sector_df.loc[:,'risk_level'] == risk_level, ]

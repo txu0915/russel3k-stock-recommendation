@@ -5,27 +5,21 @@ Created on Sun Sep 26 22:31:47 2021
 
 @author: qinfang
 """
-
-import pandas as pd
-import numpy as np
 import datetime as dt
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize as sco
 # from pypfopt.efficient_frontier import EfficientFrontier
 # from pypfopt import risk_models
 import os
 from py_scripts.top20_by_sector import *
 
-def select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered,sectors_by_portfolio_types):
+def select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered, sectors_by_portfolio_types, version_code = 'v3', pred_algo = 'df_predict_ridge'):
     final_df_filtered.index = list(range(final_df_filtered.index.shape[0]))
-    risk_levels = ['high','medium','low']
     top20_by_portfolio_types = []
     for k, v in sectors_by_portfolio_types.items():
         predicted_df_by_portfolio_types = []
         for i, gsector in enumerate(v['gsector']):
-            predicted_df = pd.read_csv(os.path.join(predicted_returns_dir, f"sector{gsector}/df_predict_best.csv"))
+            predicted_df = pd.read_csv(os.path.join(predicted_returns_dir, f"sector{gsector}-{version_code}/{pred_algo}.csv"))
             nearest_trade_date = sorted(predicted_df.iloc[:, 0])[-1]
             my_predicted_returns = list(predicted_df.iloc[-1, 1:].values)
             all_tics_in_sector = predicted_df.columns[1:]
@@ -35,15 +29,32 @@ def select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filter
         predicted_df_by_portfolio_types = pd.concat(predicted_df_by_portfolio_types)
         predicted_df_by_portfolio_types['portfolio_type'] = k
         predicted_df_by_portfolio_types.index = list(range(predicted_df_by_portfolio_types.index.shape[0]))
-
-        for level in risk_levels:
-            cur_result = pd.merge(final_df_filtered, predicted_df_by_portfolio_types, how='inner', on=['tic', 'tradedate'])
-            cur_result = cur_result.loc[:, ['predicted_returns', 'tradedate', 'tic', 'risk_level', 'portfolio_type']]
-            cur_result = cur_result.loc[cur_result.loc[:,'risk_level']==level,:].drop_duplicates()
-            cur_result = cur_result.sort_values(['tradedate','predicted_returns'], ascending=[False, False]).iloc[:20]
-            top20_by_portfolio_types.append(cur_result)
+        predicted_df_by_portfolio_types.loc[:,'risk_level'] = ''
+        for ii, row in predicted_df_by_portfolio_types.iterrows():
+            predicted_df_by_portfolio_types.loc[ii, 'risk_level'] = final_df_filtered.loc[final_df_filtered.loc[:, 'tic'] == row.tic,
+                                                            ['tradedate', 'risk_level']].sort_values('tradedate').iloc[-1].risk_level
+        top20_by_portfolio_types.append(predicted_df_by_portfolio_types)
+        # for level in risk_levels:
+        #     cur_result = pd.merge(final_df_filtered, predicted_df_by_portfolio_types, how='inner', on=['tic','tradedate'])
+        #     print(cur_result.shape, predicted_df_by_portfolio_types.shape)
+        #     cur_result = cur_result.loc[:, ['predicted_returns', 'tradedate', 'tic', 'risk_level', 'portfolio_type']]
+        #     cur_result = cur_result.loc[cur_result.loc[:,'risk_level']==level,:].drop_duplicates()
+        #     cur_result = cur_result.sort_values(['tradedate','predicted_returns'], ascending=[False, False])#.iloc[:20]
+        #     top20_by_portfolio_types.append(cur_result)
 
     return top20_by_portfolio_types
+
+#list(map(lambda x: x.tic.shape, top20_by_portfolio_types))
+# all_tics = []
+# for subfolder in os.listdir('results'):
+#     if subfolder != ".DS_Store" and subfolder != "weights":
+#         my_dir_file = os.path.join('results', subfolder,'df_predict_ridge.csv')
+#         tics = list(pd.read_csv(my_dir_file).columns)
+#         all_tics.extend(tics)
+# print(set(all_tics))
+# len(set(all_tics))
+
+
 
 
 def get_return_and_info_table(selected_stock,df_price):
@@ -132,10 +143,15 @@ def calculate_weight(all_stocks_info, all_return_table, trade_dates, save_path):
         p1_alldata = all_stocks_info[trade_dates[i]]
         # sort it by tic
         p1_alldata = p1_alldata.sort_values('tic')
-        p1_alldata = p1_alldata.reset_index()
-        del p1_alldata['index']
+        tics_by_p1_alldata = p1_alldata.tic.unique()
+        tics_by_return_table = all_return_table[trade_dates[i]].tic.unique()
+        unique_tics = pd.DataFrame({'tic': list(set(tics_by_p1_alldata) & set(tics_by_return_table))})
+        p1_alldata = pd.merge(p1_alldata, unique_tics, on='tic', how='inner')
+        all_return = pd.merge(all_return_table[trade_dates[i]], unique_tics, on='tic', how='inner')
+        p1_alldata.reset_index(inplace=True, drop=True)
+        all_return.reset_index(inplace=True, drop=True)
         # get selected stocks tic
-        pivot_returns = all_return_table[trade_dates[i]].pivot_table(index='datadate', columns='tic', values='daily_return')
+        pivot_returns = all_return.pivot_table(index='datadate', columns='tic', values='daily_return')
         # use the predicted returns as the Expected returns to feed into the portfolio object
         mu, S = pivot_returns.mean(), pivot_returns.cov()
         num_portfolios = 25000
@@ -187,11 +203,8 @@ if __name__ == '__main__':
                                                       'Financial Services','Industrials','Consumer Cyclical'],
                                               'gsector':[15, 35, 40, 20,25]},
                                   'defensive':{'GICS':['Utilities', 'Consumer Defensive'],'gsector':[55, 45]},
-                                  'all':{'GICS':['Healthcare', 'Basic Materials', 'Industrials',
-                                                'Consumer Cyclical', 'Technology', 'Real Estate',
-                                                'Financial Services', 'Consumer Defensive', 'Energy',
-                                                'Utilities','Communication Services', 'unknown'],
-                                         'gsector':[10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]}}
+                                  'energy-healthcare':{'GICS':['Healthcare', 'Energy', 'unknown'],
+                                         'gsector':[10, 50, 65]}}
 
     top20_by_portfolio_types = select_top20_stocks_by_portfolio_type(predicted_returns_dir, final_df_filtered, sectors_by_portfolio_types)
     trade_dates = list(np.unique(list(map(lambda x: x.tradedate.unique()[0], top20_by_portfolio_types))))
@@ -199,10 +212,12 @@ if __name__ == '__main__':
     price_start_date = int(dt.datetime.strftime(price_start_date, '%Y%m%d'))
     # input_file = 'raw_data/russeTop600_stock_df.csv'
     df_price = process_price_table('raw_data/russel3000_stock.csv', price_start_date)
+    version_code = 'v3'
+    weights_res_dir = f'results/weights-{version_code}'
     for i, top20_by_portfolio_type in enumerate(top20_by_portfolio_types):
-        weights_res_dir = 'results/weights'
-        risk, portfolio_type = top20_by_portfolio_type.risk_level.unique()[0], top20_by_portfolio_type.portfolio_type.unique()[0]
-        fp_output = f"stocks_weight_table_{risk}_{portfolio_type}.csv"
+        portfolio_type = top20_by_portfolio_type.portfolio_type.unique()[0]
+        print(portfolio_type)
+        fp_output = f"stocks_weight_table_{portfolio_type}.csv"
         all_stocks_info,  all_return_table  = get_return_and_info_table(top20_by_portfolio_type,df_price)
         stocks_weight_table = calculate_weight(all_stocks_info,all_return_table,trade_dates, os.path.join(weights_res_dir,fp_output))
 
@@ -218,19 +233,19 @@ if __name__ == '__main__':
         elif row.gsector in [55, 45]:
             tic2portfolio_type[row.tic] = 'defensive'
         else:
-            tic2portfolio_type[row.tic] = 'all'
+            tic2portfolio_type[row.tic] = 'energy-healthcare'
 
     historical_return_std['portfolio_type'] = ""
     for i, row in historical_return_std.iterrows():
         historical_return_std.loc[i,'portfolio_type'] = tic2portfolio_type[row.tic]
 
-    historical_return_std.to_csv("stock_recommendation_by_historical_return_variance.csv",index=False)
+    historical_return_std.to_csv("stock_recommendation_by_historical_return_variance_v3.csv",index=False)
 
     balance_sharp['portfolio_type'] = ""
     for i, row in balance_sharp.iterrows():
         balance_sharp.loc[i, 'portfolio_type'] = tic2portfolio_type[row.tic]
 
-    balance_sharp.loc[:,['tic', 'norm_gain', 'portfolio_type']].to_csv("stock_recommendation_by_balance_sharp.csv", index=False)
+    balance_sharp.loc[:,['tic', 'norm_gain', 'portfolio_type']].to_csv("stock_recommendation_by_balance_sharp_v3.csv", index=False)
 
 
     my_preds_return_sharp_ratio = []
@@ -240,9 +255,16 @@ if __name__ == '__main__':
 
 
     preds_return = pd.concat(my_preds_return_sharp_ratio,axis=0)
+    # preds_return.loc[409,'tic'] = 'PF'
+    # preds_return.loc[409,'mean_weight'] = 0.01
+    # #preds_return.loc[409, 'min_weight'] = 0.01
+    # preds_return.loc[409,'portfolio_type'] = 'energy-healthcare'
+    # preds_return.loc[409,'tradedate'] = 20220301
+    # preds_return.fillna(0.0,inplace=True)
 
-    preds_return['mean_weight'] = preds_return['mean_weight']/3.0
-    preds_return['min_weight'] = preds_return['min_weight'] / 3.0
+
+    # preds_return['mean_weight'] = preds_return['mean_weight']/3.0
+    # preds_return['min_weight'] = preds_return['min_weight'] / 3.0
 
     counts = preds_return.groupby('portfolio_type',as_index=False)['tic'].agg({'count':'count'})
     preds_return = pd.merge(preds_return,counts,how='left',on='portfolio_type')
@@ -250,13 +272,23 @@ if __name__ == '__main__':
     preds_return['efficient_frontier_allocation'] = preds_return['mean_weight']
 
     preds_return = preds_return.loc[:,['tic','predicted_returns', 'tradedate', 'portfolio_type',
-       'mean_weight', 'avg_allocation']]
+       'efficient_frontier_allocation', 'avg_allocation']]
 
-    preds_return.to_csv("stock_recommendation_by_max_predicted_return.csv", index=False)
-
-
+    preds_return.to_csv("stock_recommendation_by_max_predicted_return_v3.csv", index=False)
 
 
+    tic_sector = {}
+    for i, row in final_df.iterrows():
+        tic_sector[row.tic] = final_df.loc[i, 'GICS Sector']
 
+    files_ = list(filter(lambda x: x.startswith('stock_recommendation_by'), os.listdir('./')))
+    for f in files_:
+        myData = pd.read_csv(f)
+        myData['sector'] = ""
+        for i, row in myData.iterrows():
+            myData.loc[i, 'sector'] = tic_sector[row.tic]
+        myData.to_csv(f, index=False)
 
-
+    stocks_preds_top_20_perc, stocks_preds_all = pd.read_csv('stock_recommendation_by_max_predicted_return.csv'), pd.read_csv('stock_recommendation_by_max_predicted_return_v3.csv')
+    conjunction_file = pd.merge(stocks_preds_all, stocks_preds_top_20_perc, how='left', on='tic')
+    conjunction_file.to_csv('stock_recommendation_by_max_predicted_return_merged.csv', index=False)

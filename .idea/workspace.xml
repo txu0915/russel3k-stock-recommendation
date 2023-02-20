@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="dfc9afb7-49c6-402f-b873-0e74f4050518" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fundamental_run_model_refactored.py" beforeDir="false" afterPath="$PROJECT_DIR$/fundamental_run_model_refactored.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grab_data_preprocessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/grab_data_preprocessing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/select_top20_recs_post_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/select_top20_recs_post_processing.py" afterDir="false" />
     </list>
@@ -27,6 +28,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/run.sh" root0="FORCE_HIGHLIGHTING" />
@@ -56,20 +65,20 @@
     </key>
   </component>
   <component name="RunManager">
-    <configuration name="fundamental_run_model" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="russe3K_stock_recommendation" />
+    <configuration name="BellmanDPBase" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Exercise1" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$USER_HOME$/Downloads/Exercise1" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fundamental_run_model.py" />
+      <option name="SCRIPT_NAME" value="$USER_HOME$/Downloads/Exercise1/BellmanDPBase.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -80,7 +89,7 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.fundamental_run_model" />
+        <item itemvalue="Python.BellmanDPBase" />
       </list>
     </recent_temporary>
   </component>
@@ -107,17 +116,35 @@
       <workItem from="1638636134265" duration="471000" />
       <workItem from="1638724441288" duration="70330000" />
       <workItem from="1640059564845" duration="1838000" />
-      <workItem from="1646540814574" duration="21626000" />
+      <workItem from="1646540814574" duration="33714000" />
+      <workItem from="1648863030313" duration="3353000" />
+      <workItem from="1648998655416" duration="21895000" />
+      <workItem from="1649192474750" duration="140000" />
+      <workItem from="1652758472341" duration="5752000" />
+      <workItem from="1656125730863" duration="2477000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/russe3K_stock_recommendation$fundamental_run_model.coverage" NAME="fundamental_run_model Coverage Results" MODIFIED="1636658815187" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/russe3K_stock_recommendation$BellmanDPBase.coverage" NAME="BellmanDPBase Coverage Results" MODIFIED="1656125921071" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads/Exercise1" />
   </component>
 </project>

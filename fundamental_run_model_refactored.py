@@ -14,7 +14,7 @@ import time
 inputfile_fundamental = "--ress3k_fundamental_final.csv"
 input_sector_dir = 'pre-focasting_data'
 fundamental_total = pd.read_csv(inputfile_fundamental)
-unique_sectors_files = list(map(lambda x: f'sector{x}-v2.csv', fundamental_total.gsector.unique()))
+unique_sectors_files = list(map(lambda x: f'sector{x}-v3.csv', fundamental_total.gsector.unique()))
 
 for sector_file in unique_sectors_files:
     # if sector_file != 'sector60-v2.csv':
@@ -52,7 +52,4 @@ for sector_file in unique_sectors_files:
                                        testing_windows)
     end = time.time()
     print('Time Spent: ', (end - start) / 60, ' minutes')
-    save_model_result(model_result, sector_file[:8])
-
-
-
+    save_model_result(model_result, sector_file[:11])
